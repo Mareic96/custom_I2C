@@ -54,7 +54,7 @@ static uint32_t string_to_num(uint8_t *input) {
     return number;
 }
 
-//Setting NBYTE size, each address frame is 1 byte = 8 bits = data frame, after each address frame, slave will send an NACK and then a stop or another data frame will be sent
+//Setting NBYTE size, each address frame is 1 byte = 8 bits = data frame, after each address frame, target will send an NACK and then a stop or another data frame will be sent
 void set_nbytes(uint32_t size) {
     I2C_CR2 -> NBYTES = 0;
     I2C_CR2 -> NBYTES = size;
@@ -72,15 +72,9 @@ void get_nbytes(uint8_t *data) {
 
 void get_data(uint8_t *text, uint32_t totalLength) {
     uint16_t i = 0;
-    uint16_t pointer = 0;
     while(i < totalLength) {
         while(!(I2C_ISR -> RXNE & (1 << 0))) {};
-        if(i > 7) {
-            text[pointer] = I2C_RXDR -> RXDATA;
-            pointer++;
-        } else {
-            I2C_RXDR -> RXDATA;
-        }
+        text[i] = I2C_RXDR -> RXDATA;
         i++;
     }
     text[(totalLength - 8)] = '\0';
@@ -149,7 +143,7 @@ void i2c_write_byte (const uint8_t data) {
     //Setting the read/write bit to write
     I2C_CR2 -> RD_WRN = 0;
 
-    //Picking slave addresss
+    //Picking target addresss
     I2C_CR2 -> SADD = (8 << 1); 
 
     //Check if the bus is idle before sending anything
@@ -173,7 +167,7 @@ void i2c_write(const uint8_t *data) {
     //Setting the read/write bit to write
     I2C_CR2 -> RD_WRN = 0;
 
-    //Picking slave addresss
+    //Picking target addresss
     I2C_CR2 -> SADD = (8 << 1); 
 
     //Check if the bus is idle before sending anything
@@ -213,7 +207,7 @@ void i2c_read_string(void) {
 
     //Got the length of incoming string data
     uint32_t length = (hex_to_decimal(data));
-    uint32_t totalLength = length + 8;
+    uint32_t totalLength = length;
 
     while(!(I2C_ISR -> TC & (1 << 0))) {};
 

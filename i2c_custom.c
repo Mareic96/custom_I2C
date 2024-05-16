@@ -70,14 +70,14 @@ void get_nbytes(uint8_t *data) {
     data[8] = '\0';
 }
 
-void get_data(uint8_t *text, uint32_t totalLength) {
+void get_data(uint8_t *text, uint32_t length) {
     uint16_t i = 0;
-    while(i < totalLength) {
+    while(i < length) {
         while(!(I2C_ISR -> RXNE & (1 << 0))) {};
         text[i] = I2C_RXDR -> RXDATA;
         i++;
     }
-    text[(totalLength - 8)] = '\0';
+    text[(length - 8)] = '\0';
 }
 
 //Convert hex to decimal
@@ -207,25 +207,24 @@ void i2c_read_string(void) {
 
     //Got the length of incoming string data
     uint32_t length = (hex_to_decimal(data));
-    uint32_t totalLength = length;
 
     while(!(I2C_ISR -> TC & (1 << 0))) {};
 
-    //Now set the actual nybtes which include the first 8 bytes (which gave us the size)
-    set_nbytes(totalLength);
+    //Set the size of the incoming data
+    set_nbytes(length);
     I2C_CR2 -> SADD = (8 << 1);
 
-    uint8_t text[totalLength];
+    uint8_t text[length];
 
     //Start recieving
     I2C_CR2 -> START = 1;
 
-    get_data(text, totalLength);
+    get_data(text, length);
 
     uart_write(text, length);
 
     I2C_CR2 -> STOP = 1;
 }
 
-//Anything more than 24 length, is causing problems
+//Anything more than 33 length, is not allowed
 

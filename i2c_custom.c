@@ -77,7 +77,7 @@ void get_data(uint8_t *text, uint32_t length) {
         text[i] = I2C_RXDR -> RXDATA;
         i++;
     }
-    text[(length - 8)] = '\0';
+    text[length] = '\0';
 }
 
 //Convert hex to decimal
@@ -226,5 +226,8 @@ void i2c_read_string(void) {
     I2C_CR2 -> STOP = 1;
 }
 
+
+
+//Can you find a way to sends structs
 //Anything more than 33 length, is not allowed
 

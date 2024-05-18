@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
     
     systickDelaySec(2);
     while(1) {
-        //i2c_write((uint8_t *)"Hello Arduino");
-        //Here you will call the read function
+        i2c_write_string((uint8_t *)"Hello Arduino");
+        systickDelaySec(2);
         i2c_read_string();
         systickDelaySec(2);
     }

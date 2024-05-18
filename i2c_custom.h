@@ -167,7 +167,7 @@ uint32_t hex_to_decimal(uint8_t *data);
 void get_data(uint8_t *text, uint32_t totalLength);
 void i2c_init(void);
 void i2c_write_byte (const uint8_t data);
-void i2c_write(const uint8_t *data);
+void i2c_write_string(const uint8_t *data);
 void i2c_read_string(void);
 
 #endif

@@ -156,7 +156,7 @@ void i2c_write_byte (const uint8_t data) {
     I2C_CR2 -> START = 1;
 }
 
-void i2c_write(const uint8_t *data) {
+void i2c_write_string(const uint8_t *data) {
     const uint8_t *str_copy = data;
     uint32_t length = string_len(str_copy);
     set_nbytes(length);

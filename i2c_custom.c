@@ -96,6 +96,26 @@ uint32_t hex_to_decimal(uint8_t *data) {
     return decimal;
 }
 
+static void set_data(uint8_t type) {
+   I2C_CR2 -> AUTOEND = 0;
+
+    set_nbytes(1);
+
+    I2C_CR2 -> RD_WRN = 0;
+
+    I2C_CR2 -> SADD = (8 << 1);
+
+    while(I2C_ISR -> BUSY & (1 << 15)) {}
+
+    while(!(I2C_ISR -> TXE & (1 << 0))) {}
+    I2C_TXDR -> TXDATA = (uint32_t) type;
+    
+    //Start sending one byte
+    I2C_CR2 -> START = 1;
+    
+    while(!(I2C_ISR -> TC & (1 << 0))) {} 
+}
+
 void i2c_init(void) {
     volatile uint32_t *RCC_AHBENR = (uint32_t *) 0x40021014;
     volatile uint32_t *GPIO_MODER = (uint32_t *) 0x48000400;
@@ -136,9 +156,9 @@ void i2c_init(void) {
 }
 
 void i2c_write_byte (const uint8_t data) {
-    set_nbytes(1);
+    set_data('b');
 
-    I2C_CR2 -> AUTOEND = 1;
+    set_nbytes(1);
 
     //Setting the read/write bit to write
     I2C_CR2 -> RD_WRN = 0;
@@ -148,39 +168,61 @@ void i2c_write_byte (const uint8_t data) {
 
     //Check if the bus is idle before sending anything
     while(I2C_ISR -> BUSY  & (1 << 15)){}
+
+    //Start transmission
+    I2C_CR2 -> START = 1;
 
     while(!(I2C_ISR -> TXE & (1 << 0))){}
     I2C_TXDR -> TXDATA = (uint32_t)data;
 
-    //Start transmission
-    I2C_CR2 -> START = 1;
+    while(!(I2C_ISR -> TC & (1 << 0))) {}
+    I2C_CR2 -> STOP = 1;    
 }
 
-void i2c_write_string(const uint8_t *data) {
+void i2c_write_string(const uint8_t *data) {    
+    set_data('s');
+
     const uint8_t *str_copy = data;
-    uint32_t length = string_len(str_copy);
+    uint16_t length = string_len(str_copy);
     set_nbytes(length);
-
-    //Data transfer will end automatically; a STOP condition is automatically sent when NBYTES data transferred
-    I2C_CR2 -> AUTOEND = 1;
     
-    //Setting the read/write bit to write
-    I2C_CR2 -> RD_WRN = 0;
-
     //Picking target addresss
     I2C_CR2 -> SADD = (8 << 1); 
 
-    //Check if the bus is idle before sending anything
-    while(I2C_ISR -> BUSY  & (1 << 15)){}
-
     //Start transmission
     I2C_CR2 -> START = 1;
 
-    for(uint32_t i = 0; i < length; i++) {
+    for(uint16_t i = 0; i < length; i++) {
         //Check if the TXE bit = 1, that means no data was written into the I2C_TXDR and it's empty ready for data input
         while(!(I2C_ISR -> TXE & (1 << 0))){}
         I2C_TXDR -> TXDATA = (uint32_t)data[i];
     }
+    while(!(I2C_ISR -> TC & (1 << 0))) {}
+    I2C_CR2 -> STOP = 1;
+}
+
+void i2c_write_leds(LED *leds) {
+    //Similar to i2c_read_string implementation, look at page 854
+
+    set_data('l');
+
+    //Set nbytes to be size of struct
+    uint16_t size = sizeof(*leds);
+    set_nbytes(size);
+
+    I2C_CR2 -> SADD = (8 << 1);
+
+    I2C_CR2 -> START = 1;
+
+    uint8_t *temp = (uint8_t *)leds;
+
+    for(uint16_t i = 0; i < size; i++) {
+        while(!(I2C_ISR -> TXE &(1 << 0))){}
+        I2C_TXDR ->TXDATA = temp[i];
+        uart_write_byte(*(temp + i));
+    }
+
+    I2C_CR2 -> STOP = 1;
 }
 
 void i2c_read_string(void) {
@@ -226,8 +268,7 @@ void i2c_read_string(void) {
     I2C_CR2 -> STOP = 1;
 }
 
-
-
 //Can you find a way to sends structs
 //Anything more than 33 length, is not allowed
+//Find a way to check if target is connected to the controller
 

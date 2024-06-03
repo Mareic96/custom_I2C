@@ -151,6 +151,11 @@ typedef struct _I2CRXDR {
     volatile uint32_t Res24     : 1;
 } I2CRXDR;
 
+typedef struct leds {
+    uint8_t state;
+    uint8_t pins[3];
+} LED;
+
 #define I2C_CR1      ((I2CCR1 *) 0x40005400)
 #define I2C_CR2      ((I2CCR2 *) 0x40005404)
 #define I2C_TIMINGR  ((I2CTIMINGR *) 0x40005410)
@@ -168,6 +173,7 @@ void get_data(uint8_t *text, uint32_t totalLength);
 void i2c_init(void);
 void i2c_write_byte (const uint8_t data);
 void i2c_write_string(const uint8_t *data);
+void i2c_write_leds(LED *leds);
 void i2c_read_string(void);
 
 #endif

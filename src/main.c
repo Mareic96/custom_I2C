@@ -14,18 +14,27 @@ static void setup_gpio(void) {
     gpio_set_af(UART_PORT, GPIO_AF7, TX_PIN | RX_PIN);
 }
 
-int main(int argc, char **argv) {
+int main(void) {
     setup_gpio();
     uart_setup();
     systickSetup(8);
     i2c_init();
+
+    LED led;
+    led.state = 1;
+    led.pins[0] = 4;
+    led.pins[1] = 7;
+    led.pins[2] = 9;
     
     systickDelaySec(2);
     while(1) {
         i2c_write_string((uint8_t *)"Hello Arduino");
         systickDelaySec(2);
+        i2c_write_byte('M');
+        systickDelaySec(2);
         i2c_read_string();
         systickDelaySec(2);
+        i2c_write_leds(&led);
     }
     return 0;
 }

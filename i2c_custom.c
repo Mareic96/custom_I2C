@@ -268,7 +268,6 @@ void i2c_read_string(void) {
     I2C_CR2 -> STOP = 1;
 }
 
-//Can you find a way to sends structs
 //Anything more than 33 length, is not allowed
 //Find a way to check if target is connected to the controller
 
